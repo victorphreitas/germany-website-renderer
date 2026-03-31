@@ -1,0 +1,50 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — interactive browser-automation environment
+#
+# Exposes:
+#   :5000 → FastAPI control panel  (Launch / Kill browser)
+#   :8080 → noVNC live stream      (view & interact with the browser)
+#   :5900 → raw VNC port           (optional; for native VNC clients)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  browser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: german_browser
+
+    ports:
+      # FastAPI control panel — launch/kill the browser from here
+      - "5000:5000"
+      # noVNC live browser stream — view and interact with the browser
+      - "8080:8080"
+      # Raw VNC — useful if you prefer a native VNC client like RealVNC
+      - "5900:5900"
+
+    environment:
+      # Chromium / Playwright pick this up so they know which X display to use
+      - DISPLAY=:99
+
+    # Required so Chromium can use /dev/shm equivalent via /tmp
+    shm_size: "2gb"
+
+    # Chrome needs the --no-sandbox flag inside Docker; this makes the Linux
+    # seccomp profile a tiny bit more permissive so Chrome's internal
+    # sandboxing still works at the process level.
+    security_opt:
+      - seccomp=unconfined
+
+    # Keep the container running even if something inside crashes;
+    # remove this if you want the container to stop on script exit.
+    restart: unless-stopped
+
+    # Named volume for Playwright's browser cache so it doesn't
+    # re-download Chromium on every `docker-compose up --build`.
+    volumes:
+      - playwright_cache:/root/.cache/ms-playwright
+
+volumes:
+  playwright_cache:
