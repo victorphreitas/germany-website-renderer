@@ -108,7 +108,7 @@ You should see output similar to:
 [entrypoint] Starting noVNC / websockify on port 8080 …
 [entrypoint] noVNC ready.  Open in your browser:
 [entrypoint]   http://<DROPLET_IP>:8080/vnc.html
-[entrypoint] Launching Germany.py (Playwright + Chromium) …
+[entrypoint] Launching main.py (Playwright + Chromium) …
 [*] Navigating to https://www.umbreitshopsolution.de/ …
 [*] Page loaded.  Browser is now open — take control via noVNC.
 ```
@@ -156,7 +156,7 @@ control the browser.  For production or sensitive sessions:
 
 ## Changing the Target URL
 
-Edit `Germany.py` and update `TARGET_URL`, then rebuild:
+Edit `main.py` and update `TARGET_URL`, then rebuild:
 
 ```bash
 # On the droplet

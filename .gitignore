@@ -1,0 +1,49 @@
+# =============================================================================
+# .gitignore — Germany Browser Automation Stack
+# =============================================================================
+
+# ── Secrets & environment config ─────────────────────────────────────────────
+# NEVER commit .env — it contains the droplet IP, API key, and VNC password.
+.env
+.env.local
+.env.*.local
+
+# ── Python runtime artifacts ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]          # .pyc  .pyo  .pyd
+*.so               # compiled C extensions
+
+# ── Virtual environments (local development) ──────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Playwright test artifacts ─────────────────────────────────────────────────
+playwright-report/
+test-results/
+.playwright/
+
+# ── Logs (generated locally by Xvfb / x11vnc / websockify) ───────────────────
+*.log
+
+# ── Coverage & testing ────────────────────────────────────────────────────────
+.coverage
+.pytest_cache/
+htmlcov/
+
+# ── Distribution / packaging (not used here but safe to include) ──────────────
+dist/
+build/
+*.egg-info/
+
+# ── IDE & editor files ────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS noise ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini

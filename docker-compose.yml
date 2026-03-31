@@ -1,13 +1,14 @@
 version: "3.9"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# docker-compose.yml — interactive browser-automation environment
+# =============================================================================
+# docker-compose.yml — Germany Browser Automation Stack
 #
-# Exposes:
-#   :5000 → FastAPI control panel  (Launch / Kill browser)
-#   :8080 → noVNC live stream      (view & interact with the browser)
-#   :5900 → raw VNC port           (optional; for native VNC clients)
-# ─────────────────────────────────────────────────────────────────────────────
+# All ports and secrets are read from .env (never hardcoded here).
+# Ports exposed:
+#   ${CONTROL_PANEL_PORT} → FastAPI control panel  (Launch / Kill browser)
+#   ${VNC_PORT}           → noVNC live stream       (view & interact)
+#   5900                  → Raw VNC (internal; for native VNC clients)
+# =============================================================================
 
 services:
   browser:
@@ -16,33 +17,40 @@ services:
       dockerfile: Dockerfile
     container_name: german_browser
 
+    # Injects all variables from .env into the container environment.
+    # Docker Compose also reads .env automatically for ${VAR} substitution
+    # in this file (ports, etc.), so a single .env drives everything.
+    env_file:
+      - .env
+
     ports:
-      # FastAPI control panel — launch/kill the browser from here
-      - "5000:5000"
-      # noVNC live browser stream — view and interact with the browser
-      - "8080:8080"
-      # Raw VNC — useful if you prefer a native VNC client like RealVNC
+      # Control panel — access at http://<DROPLET_PUBLIC_IP>:${CONTROL_PANEL_PORT}/?key=<API_SECRET_KEY>
+      - "${CONTROL_PANEL_PORT}:${CONTROL_PANEL_PORT}"
+      # noVNC web stream
+      - "${VNC_PORT}:${VNC_PORT}"
+      # Raw VNC (optional — for native clients like RealVNC / TigerVNC)
       - "5900:5900"
 
     environment:
-      # Chromium / Playwright pick this up so they know which X display to use
+      # Explicit DISPLAY override ensures Chromium targets the right Xvfb screen.
+      # The other variables (TARGET_URL, API_SECRET_KEY, etc.) come from env_file.
       - DISPLAY=:99
 
-    # Required so Chromium can use /dev/shm equivalent via /tmp
+    # 2 GB shared memory — Chromium needs substantially more than Docker's
+    # default 64 MB /dev/shm.  --disable-dev-shm-usage in Chromium args
+    # redirects to /tmp as a secondary safety net.
     shm_size: "2gb"
 
-    # Chrome needs the --no-sandbox flag inside Docker; this makes the Linux
-    # seccomp profile a tiny bit more permissive so Chrome's internal
-    # sandboxing still works at the process level.
+    # Relaxed seccomp profile so Chrome's process-level sandboxing still
+    # works inside the container even without kernel namespace support.
     security_opt:
       - seccomp=unconfined
 
-    # Keep the container running even if something inside crashes;
-    # remove this if you want the container to stop on script exit.
+    # Restart the container automatically unless explicitly stopped.
     restart: unless-stopped
 
-    # Named volume for Playwright's browser cache so it doesn't
-    # re-download Chromium on every `docker-compose up --build`.
+    # Persist the Playwright/Chromium binary cache across rebuilds so
+    # Chromium is not re-downloaded every time `docker compose up --build` runs.
     volumes:
       - playwright_cache:/root/.cache/ms-playwright
 

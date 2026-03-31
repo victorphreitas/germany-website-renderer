@@ -7,7 +7,7 @@
 #   ├── Fluxbox       — minimal window manager (keeps Chrome from crashing)
 #   ├── x11vnc        — VNC server that mirrors the Xvfb display over TCP
 #   ├── noVNC         — WebSockets ↔ VNC bridge served over HTTP (port 8080)
-#   ├── Python 3      — runtime for Germany.py
+#   ├── Python 3      — runtime for main.py
 #   ├── FastAPI       — control panel web server (port 5000)
 #   └── Playwright    — browser automation (Chromium) — launched on demand
 # ─────────────────────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ RUN playwright install chromium
 RUN playwright install-deps chromium
 
 # ── Copy application code ─────────────────────────────────────────────────────
-COPY Germany.py .
+COPY main.py .
 
 # ── noVNC HTML client ─────────────────────────────────────────────────────────
 # Ubuntu packages noVNC at /usr/share/novnc — we symlink the entrypoint for
@@ -74,13 +74,16 @@ RUN ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Port 5000 → FastAPI control panel (Launch / Kill browser)
+# Ports below are documentation only — actual host bindings are set in
+# docker-compose.yml using ${CONTROL_PANEL_PORT} and ${VNC_PORT} from .env.
+
+# FastAPI control panel — access requires ?key=<API_SECRET_KEY>
 EXPOSE 5000
 
-# Port 8080 → noVNC web UI — live browser stream (HTTP + WebSockets)
+# noVNC live browser stream — access requires VNC password set in .env
 EXPOSE 8080
 
-# Port 5900 → raw VNC (optional — for native VNC clients like RealVNC)
+# Raw x11vnc VNC port (optional — for native VNC clients like RealVNC)
 EXPOSE 5900
 
 ENTRYPOINT ["/entrypoint.sh"]
